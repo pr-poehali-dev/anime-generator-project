@@ -6,12 +6,32 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 
+interface Character {
+  name: string;
+  role: string;
+  description: string;
+}
+
 interface Episode {
   number: number;
   title: string;
+  synopsis: string;
   duration: string;
-  progress: number;
-  thumbnail: string;
+}
+
+interface AnimeData {
+  title: string;
+  title_japanese: string;
+  genre: string;
+  synopsis: string;
+  characters: Character[];
+  episodes: Episode[];
+  art_style: string;
+  themes: string[];
+  studio: string;
+  year: number;
+  quality: string;
+  audio: string;
 }
 
 interface Message {
@@ -24,9 +44,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [animeTitle, setAnimeTitle] = useState('');
-  const [genre, setGenre] = useState('');
+  const [animeData, setAnimeData] = useState<AnimeData | null>(null);
 
   useEffect(() => {
     if (isGenerating && generationProgress < 100) {
@@ -37,7 +55,7 @@ const Index = () => {
     }
   }, [isGenerating, generationProgress]);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     const userMessage: Message = { role: 'user', content: prompt };
@@ -46,30 +64,37 @@ const Index = () => {
     setIsGenerating(true);
     setGenerationProgress(0);
 
-    setTimeout(() => {
-      const title = `${prompt.slice(0, 30)}${prompt.length > 30 ? '...' : ''}`;
-      setAnimeTitle(title);
-      setGenre('Фэнтези / Приключения');
+    try {
+      const response = await fetch('https://functions.poehali.dev/37ca87c2-1c6b-49c8-9322-e135aa9f3a9e', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt })
+      });
 
-      const newEpisodes: Episode[] = Array.from({ length: 12 }, (_, i) => ({
-        number: i + 1,
-        title: `Эпизод ${i + 1}`,
-        duration: '24:00',
-        progress: Math.random() * 100,
-        thumbnail: '/placeholder.svg'
-      }));
+      if (!response.ok) {
+        throw new Error('Ошибка генерации');
+      }
 
-      setEpisodes(newEpisodes);
+      const data: AnimeData = await response.json();
+      setAnimeData(data);
 
       const assistantMessage: Message = {
         role: 'assistant',
-        content: `Начинаю генерацию аниме "${title}". Создаю 12 эпизодов с уникальным сюжетом, персонажами и визуальным стилем...`
+        content: `Создано аниме "${data.title}"! ${data.synopsis.slice(0, 100)}...`
       };
       setMessages(prev => [...prev, assistantMessage]);
-      
+    } catch (error) {
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'Произошла ошибка при генерации. Попробуйте ещё раз.'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsGenerating(false);
       setPrompt('');
-    }, 3000);
+    }
   };
 
   return (
@@ -165,87 +190,119 @@ const Index = () => {
           </div>
 
           <div className="space-y-6">
-            {animeTitle && (
-              <Card className="p-6 animate-scale-in shadow-lg border-2">
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-3xl font-bold mb-2">{animeTitle}</h2>
-                    <div className="flex gap-2">
-                      <Badge variant="secondary" className="font-normal">
-                        <Icon name="Tag" size={14} className="mr-1" />
-                        {genre}
-                      </Badge>
-                      <Badge variant="outline" className="font-normal">
-                        <Icon name="Film" size={14} className="mr-1" />
-                        12 серий
-                      </Badge>
+            {animeData && (
+              <>
+                <Card className="p-6 animate-scale-in shadow-lg border-2">
+                  <div className="space-y-4">
+                    <div>
+                      <h2 className="text-3xl font-bold mb-1">{animeData.title}</h2>
+                      <p className="text-sm text-muted-foreground mb-3">{animeData.title_japanese}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="font-normal">
+                          <Icon name="Tag" size={14} className="mr-1" />
+                          {animeData.genre}
+                        </Badge>
+                        <Badge variant="outline" className="font-normal">
+                          <Icon name="Film" size={14} className="mr-1" />
+                          {animeData.episodes.length} серий
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <p className="text-sm leading-relaxed">{animeData.synopsis}</p>
+
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Студия</p>
+                        <p className="font-medium">{animeData.studio}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Год</p>
+                        <p className="font-medium">{animeData.year}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Качество</p>
+                        <p className="font-medium">{animeData.quality}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Озвучка</p>
+                        <p className="font-medium">{animeData.audio}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Стиль рисовки</p>
+                      <p className="text-sm">{animeData.art_style}</p>
+                    </div>
+
+                    <div className="pt-2 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Темы</p>
+                      <div className="flex flex-wrap gap-2">
+                        {animeData.themes.map((theme, idx) => (
+                          <Badge key={idx} variant="outline" className="font-normal text-xs">
+                            {theme}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
+                </Card>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Студия</p>
-                      <p className="font-medium">AI Studio</p>
+                {animeData.characters.length > 0 && (
+                  <Card className="p-6 animate-scale-in shadow-lg">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Icon name="Users" size={24} className="text-primary" />
+                      <h2 className="text-xl font-semibold">Персонажи</h2>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Год</p>
-                      <p className="font-medium">2025</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Качество</p>
-                      <p className="font-medium">4K Ultra HD</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Озвучка</p>
-                      <p className="font-medium">Японская + Русская</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {episodes.length > 0 && (
-              <Card className="p-6 animate-slide-in-up shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Эпизоды</h2>
-                  <Badge className="font-normal">
-                    {episodes.length} серий
-                  </Badge>
-                </div>
-
-                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                  {episodes.map((episode) => (
-                    <Card
-                      key={episode.number}
-                      className="p-4 hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-                    >
-                      <div className="flex gap-4">
-                        <div className="w-24 h-16 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                          <Icon name="Play" className="text-muted-foreground" size={24} />
+                    <div className="space-y-3">
+                      {animeData.characters.map((character, idx) => (
+                        <div key={idx} className="p-4 bg-muted rounded-lg">
+                          <h3 className="font-semibold mb-1">{character.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">{character.role}</p>
+                          <p className="text-xs">{character.description}</p>
                         </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div>
-                              <h3 className="font-semibold text-sm">
-                                {episode.number}. {episode.title}
-                              </h3>
-                              <p className="text-xs text-muted-foreground">
-                                {episode.duration}
-                              </p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              {Math.round(episode.progress)}%
-                            </Badge>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+                <Card className="p-6 animate-slide-in-up shadow-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold">Эпизоды</h2>
+                    <Badge className="font-normal">
+                      {animeData.episodes.length} серий
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                    {animeData.episodes.map((episode) => (
+                      <Card
+                        key={episode.number}
+                        className="p-4 hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                      >
+                        <div className="flex gap-4">
+                          <div className="w-20 h-14 bg-gradient-to-br from-accent to-accent/50 rounded-lg flex items-center justify-center shrink-0">
+                            <span className="text-2xl font-bold text-primary">{episode.number}</span>
                           </div>
                           
-                          <Progress value={episode.progress} className="h-1.5" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm mb-1">
+                              {episode.title}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              {episode.synopsis}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <Icon name="Clock" size={12} className="text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{episode.duration}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </Card>
+                      </Card>
+                    ))}
+                  </div>
+                </Card>
+              </>
             )}
           </div>
         </div>

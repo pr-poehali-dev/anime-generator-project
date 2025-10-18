@@ -1,19 +1,11 @@
 import json
-import os
+import hashlib
+import random
 from typing import Dict, Any, List
-from dataclasses import dataclass
-from openai import OpenAI
-
-@dataclass
-class Episode:
-    number: int
-    title: str
-    synopsis: str
-    duration: str = "24:00"
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     '''
-    Business: Generate unique anime story with 12 episodes using AI
+    Business: Generate unique anime story with 12 episodes using algorithmic generation
     Args: event with httpMethod, body containing user prompt
           context with request_id
     Returns: JSON with anime title, genre, episodes, characters
@@ -58,51 +50,113 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False
         }
     
-    api_key = os.environ.get('OPENAI_API_KEY')
-    if not api_key:
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({'error': 'OpenAI API key not configured'}),
-            'isBase64Encoded': False
-        }
+    seed = int(hashlib.md5(user_prompt.encode()).hexdigest(), 16) % (10 ** 8)
+    rng = random.Random(seed)
     
-    client = OpenAI(api_key=api_key)
+    genres = [
+        "Фэнтези / Приключения",
+        "Научная фантастика / Киберпанк",
+        "Школьная жизнь / Драма",
+        "Боевые искусства / Сёнен",
+        "Романтика / Комедия",
+        "Мистика / Триллер",
+        "Исторический / Самураи",
+        "Спорт / Соревнование",
+        "Меха / Военный",
+        "Фэнтези / Магия"
+    ]
     
-    system_prompt = """Ты — креативный сценарист аниме-студии. 
-Создай детальный план аниме-сериала на 12 эпизодов по 24 минуты каждый.
-Ответь в формате JSON:
-{
-  "title": "Название аниме на русском",
-  "title_japanese": "Название на японском (ромадзи)",
-  "genre": "Жанр / Поджанр",
-  "synopsis": "Краткое описание всего сериала (2-3 предложения)",
-  "characters": [
-    {"name": "Имя", "role": "Роль", "description": "Краткое описание"},
-    ...
-  ],
-  "episodes": [
-    {"number": 1, "title": "Название эпизода", "synopsis": "Краткое описание эпизода"},
-    ...
-  ],
-  "art_style": "Описание визуального стиля",
-  "themes": ["Тема 1", "Тема 2"]
-}"""
+    art_styles = [
+        "Детализированная прорисовка в стиле Kyoto Animation с мягкими тенями",
+        "Динамичная анимация студии Ufotable с яркими эффектами",
+        "Минималистичный стиль Trigger с экспрессивной мимикой",
+        "Реалистичная прорисовка Production I.G с кинематографичными ракурсами",
+        "Яркая палитра Bones с плавными переходами",
+        "Готический стиль Shaft с необычными углами камеры"
+    ]
     
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Создай аниме на основе идеи: {user_prompt}"}
-        ],
-        temperature=0.9,
-        response_format={"type": "json_object"}
-    )
+    themes_pool = [
+        "Дружба и верность", "Поиск себя", "Преодоление трудностей",
+        "Борьба добра и зла", "Цена силы", "Семейные узы",
+        "Месть и прощение", "Любовь и жертва", "Судьба и выбор",
+        "Технологии и человечность", "Мечты и реальность", "Свобода и долг"
+    ]
     
-    anime_data = json.loads(response.choices[0].message.content)
+    first_names = ["Харуто", "Юки", "Рин", "Акира", "Сора", "Каэде", "Хината", "Юма", "Аой", "Рен"]
+    last_names = ["Танака", "Сато", "Ямамото", "Кобаяши", "Ватанабэ", "Накамура", "Мори", "Хаяси", "Судзуки", "Ито"]
+    
+    roles = [
+        "Главный герой-новичок с скрытым потенциалом",
+        "Мудрый наставник с загадочным прошлым",
+        "Верный друг и комический персонаж",
+        "Загадочный антагонист с благими намерениями",
+        "Талантливая героиня с сильным характером",
+        "Соперник, который станет союзником"
+    ]
+    
+    episode_templates = [
+        "Начало путешествия — {hero} обнаруживает свою судьбу",
+        "Первое испытание — встреча с {rival}",
+        "Обучение и тренировка под руководством {mentor}",
+        "Появление угрозы — первое столкновение с врагом",
+        "Формирование команды — новые союзники",
+        "Раскрытие тайны прошлого главного героя",
+        "Внутренний конфликт и моральная дилемма",
+        "Предательство и неожиданный поворот",
+        "Потеря и осознание истинной силы",
+        "Решающая битва — подготовка к финалу",
+        "Кульминация — столкновение с главным врагом",
+        "Новые горизонты — завершение и надежда на будущее"
+    ]
+    
+    genre = rng.choice(genres)
+    art_style = rng.choice(art_styles)
+    themes = rng.sample(themes_pool, 3)
+    
+    title_words = user_prompt.split()[:3]
+    title = " ".join([w.capitalize() for w in title_words])
+    if not title:
+        title = "Новая история"
+    
+    characters = []
+    for i in range(min(6, len(roles))):
+        char_name = f"{rng.choice(first_names)} {rng.choice(last_names)}"
+        characters.append({
+            "name": char_name,
+            "role": roles[i],
+            "description": f"Персонаж с уникальной историей, связанной с темой: {rng.choice(themes)}"
+        })
+    
+    hero_name = characters[0]["name"].split()[0] if characters else "герой"
+    mentor_name = characters[1]["name"].split()[0] if len(characters) > 1 else "наставник"
+    rival_name = characters[2]["name"].split()[0] if len(characters) > 2 else "соперник"
+    
+    episodes = []
+    for i, template in enumerate(episode_templates, 1):
+        ep_title = template.format(hero=hero_name, mentor=mentor_name, rival=rival_name)
+        synopsis = f"В этом эпизоде {hero_name} сталкивается с новыми вызовами. {user_prompt[:50]}... Развитие сюжета приводит к важным открытиям."
+        
+        episodes.append({
+            "number": i,
+            "title": f"Эпизод {i}: {ep_title[:40]}",
+            "synopsis": synopsis[:150],
+            "duration": "24:00"
+        })
+    
+    anime_data = {
+        "title": title,
+        "title_japanese": "Shin Sekai",
+        "genre": genre,
+        "synopsis": f"{user_prompt}. История о {hero_name}, который отправляется в невероятное путешествие, полное испытаний и открытий.",
+        "characters": characters,
+        "episodes": episodes,
+        "art_style": art_style,
+        "themes": themes,
+        "studio": "AI Animation Studio",
+        "year": 2025,
+        "quality": "4K Ultra HD",
+        "audio": "Японская озвучка + Русские субтитры"
+    }
     
     return {
         'statusCode': 200,
