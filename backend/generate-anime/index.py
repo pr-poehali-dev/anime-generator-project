@@ -204,6 +204,45 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         ep_opening = episode_openings[i-1] if i <= len(episode_openings) else opening
         ep_ending = episode_endings[i-1] if i <= len(episode_endings) else ending
         
+        manga_panels = [
+            {
+                "image": f"panel_{i}_1",
+                "dialogue": f"{hero_name}: {['Что это за место?', 'Я должен стать сильнее!', 'Почему всё так происходит?', 'Я не могу этого допустить!'][i % 4]}",
+                "character": hero_name,
+                "soundEffect": ""
+            },
+            {
+                "image": f"panel_{i}_2",
+                "dialogue": f"{mentor_name if i > 2 else rival_name}: {['Слушай меня внимательно...', 'Ты ещё не готов!', 'Твоя сила растёт...', 'Настало время узнать правду'][i % 4]}",
+                "character": mentor_name if i > 2 else rival_name,
+                "soundEffect": ""
+            },
+            {
+                "image": f"panel_{i}_3",
+                "dialogue": "",
+                "character": "",
+                "soundEffect": ["ドドド (напряжение)", "バン！ (удар)", "ザッ (движение)", "キラキラ (блеск)"][i % 4]
+            },
+            {
+                "image": f"panel_{i}_4",
+                "dialogue": f"{hero_name}: {['Это... невероятно!', 'Я понимаю теперь!', 'Прости меня...', 'Я не отступлю!'][i % 4]}",
+                "character": hero_name,
+                "soundEffect": ""
+            },
+            {
+                "image": f"panel_{i}_5",
+                "dialogue": f"{characters[rng.randint(0, min(3, len(characters)-1))]['name'].split()[0]}: {['Берегись!', 'Невероятно...', 'Что ты натворил?!', 'Ты это сделал!'][i % 4]}",
+                "character": characters[rng.randint(0, min(3, len(characters)-1))]['name'].split()[0],
+                "soundEffect": ""
+            },
+            {
+                "image": f"panel_{i}_6",
+                "dialogue": "",
+                "character": "",
+                "soundEffect": ["ゴゴゴ (предчувствие)", "ドカーン！ (взрыв)", "シーン (тишина)", "キィィ (скрип)"][i % 4]
+            }
+        ]
+        
         episodes.append({
             "number": i,
             "title": f"Эпизод {i}: {ep_title[:40]}",
@@ -212,7 +251,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             "duration": "24:00",
             "opening": ep_opening,
             "ending": ep_ending,
-            "keyMoments": key_moments
+            "keyMoments": key_moments,
+            "mangaPanels": manga_panels
         })
     
     anime_data = {

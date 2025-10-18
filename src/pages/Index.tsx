@@ -17,6 +17,13 @@ interface Song {
   artist: string;
 }
 
+interface MangaPanel {
+  image: string;
+  dialogue: string;
+  character: string;
+  soundEffect?: string;
+}
+
 interface Episode {
   number: number;
   title: string;
@@ -26,6 +33,7 @@ interface Episode {
   opening: Song;
   ending: Song;
   keyMoments: string[];
+  mangaPanels: MangaPanel[];
 }
 
 interface AnimeData {
@@ -54,6 +62,8 @@ const Index = () => {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
+  const [isReadingManga, setIsReadingManga] = useState(false);
+  const [currentPanelIndex, setCurrentPanelIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [animeData, setAnimeData] = useState<AnimeData | null>(null);
@@ -419,6 +429,17 @@ const Index = () => {
                   </div>
                 </div>
 
+                <div className="border-t pt-6">
+                  <Button 
+                    onClick={() => setIsReadingManga(true)}
+                    className="w-full h-14 text-lg font-bold"
+                    size="lg"
+                  >
+                    <Icon name="BookOpen" size={24} className="mr-2" />
+                    Читать мангу
+                  </Button>
+                </div>
+
                 <div className="border-t pt-6 grid grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
@@ -443,6 +464,107 @@ const Index = () => {
                 </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {isReadingManga && selectedEpisode && (
+          <div className="fixed inset-0 bg-black z-50 flex flex-col">
+            <div className="bg-background border-b p-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => {
+                    setIsReadingManga(false);
+                    setCurrentPanelIndex(0);
+                  }}
+                >
+                  <Icon name="X" size={24} />
+                </Button>
+                <div>
+                  <h2 className="font-bold">{selectedEpisode.title}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Панель {currentPanelIndex + 1} из {selectedEpisode.mangaPanels.length}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPanelIndex(Math.max(0, currentPanelIndex - 1))}
+                  disabled={currentPanelIndex === 0}
+                >
+                  <Icon name="ChevronLeft" size={20} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPanelIndex(Math.min(selectedEpisode.mangaPanels.length - 1, currentPanelIndex + 1))}
+                  disabled={currentPanelIndex === selectedEpisode.mangaPanels.length - 1}
+                >
+                  <Icon name="ChevronRight" size={20} />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center p-8 overflow-auto bg-gradient-to-br from-zinc-900 to-zinc-800">
+              <div className="max-w-2xl w-full">
+                <Card className="overflow-hidden">
+                  <div className="aspect-[3/4] bg-white flex items-center justify-center relative">
+                    <div className="absolute inset-0 flex items-center justify-center text-zinc-400">
+                      <Icon name="Image" size={64} />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-zinc-600 text-center px-8">
+                        Панель {currentPanelIndex + 1}: {selectedEpisode.mangaPanels[currentPanelIndex].character || 'Сцена'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 bg-card space-y-4">
+                    {selectedEpisode.mangaPanels[currentPanelIndex].soundEffect && (
+                      <div className="text-center">
+                        <Badge variant="outline" className="text-lg px-4 py-2 font-bold">
+                          {selectedEpisode.mangaPanels[currentPanelIndex].soundEffect}
+                        </Badge>
+                      </div>
+                    )}
+                    
+                    {selectedEpisode.mangaPanels[currentPanelIndex].dialogue && (
+                      <div className="bg-muted/50 p-4 rounded-lg border-l-4 border-primary">
+                        <p className="font-semibold text-sm text-primary mb-1">
+                          {selectedEpisode.mangaPanels[currentPanelIndex].character}
+                        </p>
+                        <p className="text-base leading-relaxed">
+                          {selectedEpisode.mangaPanels[currentPanelIndex].dialogue}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => setCurrentPanelIndex(Math.max(0, currentPanelIndex - 1))}
+                        disabled={currentPanelIndex === 0}
+                      >
+                        <Icon name="ArrowLeft" size={16} className="mr-2" />
+                        Назад
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        onClick={() => setCurrentPanelIndex(Math.min(selectedEpisode.mangaPanels.length - 1, currentPanelIndex + 1))}
+                        disabled={currentPanelIndex === selectedEpisode.mangaPanels.length - 1}
+                      >
+                        Далее
+                        <Icon name="ArrowRight" size={16} className="ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </div>
         )}
       </div>
