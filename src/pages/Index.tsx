@@ -12,11 +12,18 @@ interface Character {
   description: string;
 }
 
+interface Song {
+  title: string;
+  artist: string;
+}
+
 interface Episode {
   number: number;
   title: string;
   synopsis: string;
   duration: string;
+  opening: Song;
+  ending: Song;
 }
 
 interface AnimeData {
@@ -32,6 +39,8 @@ interface AnimeData {
   year: number;
   quality: string;
   audio: string;
+  opening: Song;
+  ending: Song;
 }
 
 interface Message {
@@ -245,6 +254,23 @@ const Index = () => {
                         ))}
                       </div>
                     </div>
+
+                    <div className="pt-2 border-t space-y-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">🎵 Опенинг</p>
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <p className="font-medium text-sm">{animeData.opening.title}</p>
+                          <p className="text-xs text-muted-foreground">{animeData.opening.artist}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">🎵 Эндинг</p>
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <p className="font-medium text-sm">{animeData.ending.title}</p>
+                          <p className="text-xs text-muted-foreground">{animeData.ending.artist}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </Card>
 
@@ -280,21 +306,35 @@ const Index = () => {
                         key={episode.number}
                         className="p-4 hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                       >
-                        <div className="flex gap-4">
-                          <div className="w-20 h-14 bg-gradient-to-br from-accent to-accent/50 rounded-lg flex items-center justify-center shrink-0">
-                            <span className="text-2xl font-bold text-primary">{episode.number}</span>
+                        <div className="space-y-3">
+                          <div className="flex gap-4">
+                            <div className="w-20 h-14 bg-gradient-to-br from-accent to-accent/50 rounded-lg flex items-center justify-center shrink-0">
+                              <span className="text-2xl font-bold text-primary">{episode.number}</span>
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm mb-1">
+                                {episode.title}
+                              </h3>
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {episode.synopsis}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <Icon name="Clock" size={12} className="text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">{episode.duration}</span>
+                              </div>
+                            </div>
                           </div>
                           
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm mb-1">
-                              {episode.title}
-                            </h3>
-                            <p className="text-xs text-muted-foreground mb-2">
-                              {episode.synopsis}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <Icon name="Clock" size={12} className="text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">{episode.duration}</span>
+                          <div className="flex gap-2 text-xs border-t pt-2">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Icon name="Music" size={12} />
+                              <span>OP: {episode.opening.title}</span>
+                            </div>
+                            <span className="text-muted-foreground">•</span>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Icon name="Music" size={12} />
+                              <span>ED: {episode.ending.title}</span>
                             </div>
                           </div>
                         </div>

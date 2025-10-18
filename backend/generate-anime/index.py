@@ -82,8 +82,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         "Технологии и человечность", "Мечты и реальность", "Свобода и долг"
     ]
     
-    first_names = ["Харуто", "Юки", "Рин", "Акира", "Сора", "Каэде", "Хината", "Юма", "Аой", "Рен"]
-    last_names = ["Танака", "Сато", "Ямамото", "Кобаяши", "Ватанабэ", "Накамура", "Мори", "Хаяси", "Судзуки", "Ито"]
+    first_names = ["Харуто", "Юки", "Рин", "Акира", "Сора", "Каэде", "Хината", "Юма", "Аой", "Рен", 
+                   "Такэси", "Мэй", "Кента", "Саяка", "Дайки", "Нана", "Райто", "Мику", "Ёсуке", "Хикари"]
+    last_names = ["Танака", "Сато", "Ямамото", "Кобаяши", "Ватанабэ", "Накамура", "Мори", "Хаяси", "Судзуки", "Ито",
+                  "Такахаси", "Мацумото", "Иноуэ", "Кимура", "Симидзу", "Ямада", "Сасаки", "Кудо", "Фудзита", "Оно"]
     
     roles = [
         "Главный герой-новичок с скрытым потенциалом",
@@ -91,7 +93,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         "Верный друг и комический персонаж",
         "Загадочный антагонист с благими намерениями",
         "Талантливая героиня с сильным характером",
-        "Соперник, который станет союзником"
+        "Соперник, который станет союзником",
+        "Загадочный незнакомец с важной информацией",
+        "Младший брат/сестра с уникальной способностью",
+        "Безумный учёный или исследователь",
+        "Предатель с трагической историей",
+        "Хранитель древних знаний",
+        "Воин с кодексом чести",
+        "Целитель с тёмным секретом",
+        "Шпион из враждебной организации",
+        "Торговец редкими артефактами",
+        "Бывший враг, ставший союзником",
+        "Таинственный ребёнок с пророческими видениями",
+        "Механик или изобретатель",
+        "Искусный вор с золотым сердцем",
+        "Одержимый местью родственник"
     ]
     
     episode_templates = [
@@ -118,18 +134,46 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not title:
         title = "Новая история"
     
+    num_characters = rng.randint(8, 15)
     characters = []
-    for i in range(min(6, len(roles))):
-        char_name = f"{rng.choice(first_names)} {rng.choice(last_names)}"
+    used_names = set()
+    
+    for i in range(num_characters):
+        while True:
+            char_name = f"{rng.choice(first_names)} {rng.choice(last_names)}"
+            if char_name not in used_names:
+                used_names.add(char_name)
+                break
+        
+        role = roles[i] if i < len(roles) else rng.choice(roles)
         characters.append({
             "name": char_name,
-            "role": roles[i],
+            "role": role,
             "description": f"Персонаж с уникальной историей, связанной с темой: {rng.choice(themes)}"
         })
     
     hero_name = characters[0]["name"].split()[0] if characters else "герой"
     mentor_name = characters[1]["name"].split()[0] if len(characters) > 1 else "наставник"
     rival_name = characters[2]["name"].split()[0] if len(characters) > 2 else "соперник"
+    
+    opening_songs = [
+        {"title": "Mirai e no Tobira", "artist": "LiSA"},
+        {"title": "Kibou no Hikari", "artist": "YOASOBI"},
+        {"title": "Shinjitsu no Michi", "artist": "Aimer"},
+        {"title": "Tsubasa wo Kudasai", "artist": "RADWIMPS"},
+        {"title": "Sekai no Hate Made", "artist": "Eve"}
+    ]
+    
+    ending_songs = [
+        {"title": "Sayonara no Uta", "artist": "Kenshi Yonezu"},
+        {"title": "Tsuki to Hoshi", "artist": "Official HIGE DANdism"},
+        {"title": "Ashita e", "artist": "Aimyon"},
+        {"title": "Yume no Kakera", "artist": "King Gnu"},
+        {"title": "Kanashimi no Iro", "artist": "BUMP OF CHICKEN"}
+    ]
+    
+    opening = rng.choice(opening_songs)
+    ending = rng.choice(ending_songs)
     
     episodes = []
     for i, template in enumerate(episode_templates, 1):
@@ -140,7 +184,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             "number": i,
             "title": f"Эпизод {i}: {ep_title[:40]}",
             "synopsis": synopsis[:150],
-            "duration": "24:00"
+            "duration": "24:00",
+            "opening": opening,
+            "ending": ending
         })
     
     anime_data = {
@@ -155,7 +201,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         "studio": "AI Animation Studio",
         "year": 2025,
         "quality": "4K Ultra HD",
-        "audio": "Японская озвучка + Русские субтитры"
+        "audio": "Японская озвучка + Русские субтитры",
+        "opening": opening,
+        "ending": ending
     }
     
     return {
