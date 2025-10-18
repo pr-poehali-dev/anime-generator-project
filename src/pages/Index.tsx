@@ -21,9 +21,11 @@ interface Episode {
   number: number;
   title: string;
   synopsis: string;
+  fullStory: string;
   duration: string;
   opening: Song;
   ending: Song;
+  keyMoments: string[];
 }
 
 interface AnimeData {
@@ -51,6 +53,7 @@ interface Message {
 const Index = () => {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [animeData, setAnimeData] = useState<AnimeData | null>(null);
@@ -305,6 +308,7 @@ const Index = () => {
                       <Card
                         key={episode.number}
                         className="p-4 hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                        onClick={() => setSelectedEpisode(episode)}
                       >
                         <div className="space-y-3">
                           <div className="flex gap-4">
@@ -316,7 +320,7 @@ const Index = () => {
                               <h3 className="font-semibold text-sm mb-1">
                                 {episode.title}
                               </h3>
-                              <p className="text-xs text-muted-foreground mb-2">
+                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                                 {episode.synopsis}
                               </p>
                               <div className="flex items-center gap-2">
@@ -346,6 +350,101 @@ const Index = () => {
             )}
           </div>
         </div>
+
+        {selectedEpisode && (
+          <div 
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedEpisode(null)}
+          >
+            <Card 
+              className="max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-card border-b p-6 flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Badge className="text-lg px-3 py-1">Серия {selectedEpisode.number}</Badge>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Icon name="Clock" size={14} />
+                      <span>{selectedEpisode.duration}</span>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-bold">{selectedEpisode.title}</h2>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setSelectedEpisode(null)}
+                  className="shrink-0"
+                >
+                  <Icon name="X" size={20} />
+                </Button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                    <Icon name="FileText" size={16} />
+                    Краткое описание
+                  </h3>
+                  <p className="text-sm leading-relaxed bg-muted/50 p-4 rounded-lg">
+                    {selectedEpisode.synopsis}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                    <Icon name="BookOpen" size={16} />
+                    Полный сюжет серии
+                  </h3>
+                  <p className="text-sm leading-relaxed whitespace-pre-line">
+                    {selectedEpisode.fullStory}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                    <Icon name="Sparkles" size={16} />
+                    Ключевые моменты
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedEpisode.keyMoments.map((moment, idx) => (
+                      <div key={idx} className="flex gap-3 items-start">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-primary">{idx + 1}</span>
+                        </div>
+                        <p className="text-sm flex-1">{moment}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                      <Icon name="Music" size={14} />
+                      Опенинг
+                    </h3>
+                    <div className="bg-muted/50 p-3 rounded-lg">
+                      <p className="font-medium text-sm">{selectedEpisode.opening.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{selectedEpisode.opening.artist}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                      <Icon name="Music" size={14} />
+                      Эндинг
+                    </h3>
+                    <div className="bg-muted/50 p-3 rounded-lg">
+                      <p className="font-medium text-sm">{selectedEpisode.ending.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{selectedEpisode.ending.artist}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
